@@ -28,15 +28,24 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
       
       const tableId = `table_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       
-      // Create the table
-      await blink.db.tables.create({
+      console.log('Creating table with data:', {
         id: tableId,
         baseId,
         name: name.trim(),
-        description: description.trim() || undefined,
-        userId: user.id,
-        createdAt: new Date().toISOString()
+        description: description.trim() || null,
+        userId: user.id
       })
+      
+      // Create the table
+      const tableResult = await blink.db.tables.create({
+        id: tableId,
+        baseId,
+        name: name.trim(),
+        description: description.trim() || null,
+        userId: user.id
+      })
+      
+      console.log('Table created successfully:', tableResult)
 
       // Create default fields
       const fields = [
@@ -47,6 +56,17 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
       for (let i = 0; i < fields.length; i++) {
         const field = fields[i]
         const fieldId = `field_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`
+        
+        console.log('Creating field:', {
+          id: fieldId,
+          tableId,
+          name: field.name,
+          type: field.type,
+          position: field.position,
+          required: false,
+          userId: user.id
+        })
+        
         await blink.db.fields.create({
           id: fieldId,
           tableId,
@@ -54,8 +74,7 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
           type: field.type,
           position: field.position,
           required: false,
-          userId: user.id,
-          createdAt: new Date().toISOString()
+          userId: user.id
         })
         
         // Small delay to ensure unique timestamps
@@ -64,14 +83,24 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
 
       // Create default view
       const viewId = `view_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      
+      console.log('Creating view:', {
+        id: viewId,
+        tableId,
+        name: 'Grid view',
+        type: 'grid',
+        userId: user.id
+      })
+      
       await blink.db.views.create({
         id: viewId,
         tableId,
         name: 'Grid view',
         type: 'grid',
-        userId: user.id,
-        createdAt: new Date().toISOString()
+        userId: user.id
       })
+
+      console.log('All components created successfully')
 
       // Clear form and close modal
       setName('')
@@ -85,7 +114,9 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
       
     } catch (error) {
       console.error('Failed to create table:', error)
-      alert('Failed to create table. Please try again.')
+      // Show more detailed error information
+      const errorMessage = error instanceof Error ? error.message : 'Unknown error occurred'
+      alert(`Failed to create table: ${errorMessage}`)
     } finally {
       setLoading(false)
     }
