@@ -28,12 +28,14 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
       
       const tableId = `table_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
       
+      // Create the table
       await blink.db.tables.create({
         id: tableId,
         baseId,
         name: name.trim(),
         description: description.trim() || undefined,
-        userId: user.id
+        userId: user.id,
+        createdAt: new Date().toISOString()
       })
 
       // Create default fields
@@ -42,8 +44,9 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
         { name: 'Notes', type: 'text', position: 1 }
       ]
 
-      for (const field of fields) {
-        const fieldId = `field_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`
+      for (let i = 0; i < fields.length; i++) {
+        const field = fields[i]
+        const fieldId = `field_${Date.now()}_${i}_${Math.random().toString(36).substr(2, 9)}`
         await blink.db.fields.create({
           id: fieldId,
           tableId,
@@ -51,8 +54,12 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
           type: field.type,
           position: field.position,
           required: false,
-          userId: user.id
+          userId: user.id,
+          createdAt: new Date().toISOString()
         })
+        
+        // Small delay to ensure unique timestamps
+        await new Promise(resolve => setTimeout(resolve, 10))
       }
 
       // Create default view
@@ -62,15 +69,23 @@ export function CreateTableModal({ open, onOpenChange, baseId, onSuccess }: Crea
         tableId,
         name: 'Grid view',
         type: 'grid',
-        userId: user.id
+        userId: user.id,
+        createdAt: new Date().toISOString()
       })
 
+      // Clear form and close modal
       setName('')
       setDescription('')
       onOpenChange(false)
-      onSuccess()
+      
+      // Trigger refresh after a short delay to ensure data is saved
+      setTimeout(() => {
+        onSuccess()
+      }, 100)
+      
     } catch (error) {
       console.error('Failed to create table:', error)
+      alert('Failed to create table. Please try again.')
     } finally {
       setLoading(false)
     }

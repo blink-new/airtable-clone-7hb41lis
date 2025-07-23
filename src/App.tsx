@@ -25,6 +25,9 @@ function App() {
   const [createBaseModalOpen, setCreateBaseModalOpen] = useState(false)
   const [createTableModalOpen, setCreateTableModalOpen] = useState(false)
   const [createRecordModalOpen, setCreateRecordModalOpen] = useState(false)
+  
+  // Refresh key to force re-renders
+  const [refreshKey, setRefreshKey] = useState(0)
 
   useEffect(() => {
     const unsubscribe = blink.auth.onAuthStateChanged((state) => {
@@ -110,8 +113,8 @@ function App() {
   }
 
   const refreshData = () => {
-    // This will trigger re-renders in child components
-    setSelectedBaseId(prev => prev)
+    // Force refresh by incrementing the refresh key
+    setRefreshKey(prev => prev + 1)
   }
 
   if (loading) {
@@ -145,6 +148,7 @@ function App() {
       <div className="flex-1 flex overflow-hidden">
         {/* Sidebar */}
         <Sidebar
+          key={refreshKey}
           selectedBaseId={selectedBaseId}
           selectedTableId={selectedTableId}
           selectedViewId={selectedViewId}
